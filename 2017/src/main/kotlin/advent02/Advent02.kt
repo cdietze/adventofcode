@@ -8,14 +8,14 @@ typealias Sheet = List<Row>
 
 fun Row.minMaxDiff(): Int? = if (this.isEmpty()) null else this.max()!! - this.min()!!
 
-fun Row.evenlyDivisionResult(): Int = this.withIndex().flatMap { (index, a) ->
-    this.listIterator(index + 1).asSequence().map { b ->
+fun Row.evenlyDivisionResult(): Int = this.withIndex().flatMap { a ->
+    this.withIndex().map { b ->
         when {
-            a.rem(b) == 0 -> a / b
-            b.rem(a) == 0 -> b / a
+            a.index == b.index -> null
+            a.value % b.value == 0 -> a.value / b.value
             else -> null
         }
-    }.toList()
+    }
 }.filterNotNull().first()
 
 fun Sheet.checkSum(): Int = this.sumBy { row -> row.minMaxDiff()!! }
