@@ -6,21 +6,37 @@ import kotlin.test.assertEquals
 fun main(args: Array<String>) {
     val input = File("src/main/kotlin/advent05/input.txt").readLines().map { it.toInt() }
     println("Result part1: ${input.stepsUntilExit()}")
+    println("Result part2: ${input.stepsUntilExitB()}")
 }
 
 fun List<Int>.stepsUntilExit(): Int {
-    fun MutableList<Int>.process(step: Int): Int {
-        val oldValue = this[step]
-        this[step] = oldValue + 1
-        return step + oldValue
-    }
-
     val mem = this.toMutableList()
-    var step = 0
+    fun process(step: Int): Int? {
+        val oldValue = mem[step]
+        mem[step] = oldValue + 1
+        val newStep = step + oldValue
+        return if (newStep in 0 until this.size) newStep else null
+    }
+    return stepsUntilExit(::process)
+}
+
+fun List<Int>.stepsUntilExitB(): Int {
+    val mem = this.toMutableList()
+    fun process(step: Int): Int? {
+        val oldValue = mem[step]
+        mem[step] = oldValue + if (oldValue >= 3) -1 else 1
+        val newStep = step + oldValue
+        return if (newStep in 0 until this.size) newStep else null
+    }
+    return stepsUntilExit(::process)
+}
+
+fun stepsUntilExit(process: (step: Int) -> Int?): Int {
+    var step: Int? = 0
     var count = 0
-    while (step >= 0 && step < mem.size) {
+    while (step != null) {
         count += 1
-        step = mem.process(step)
+        step = process(step)
     }
     return count
 }
