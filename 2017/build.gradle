@@ -26,3 +26,10 @@ compileKotlin {
 compileTestKotlin {
     kotlinOptions.jvmTarget = "1.8"
 }
+
+task execute(type: JavaExec) {
+    def day = findProperty('day')
+    println "Running advent${day}"
+    main = "advent${day}.Advent${day}Kt"
+    classpath = sourceSets.main.runtimeClasspath
+}
