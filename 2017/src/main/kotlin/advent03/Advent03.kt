@@ -1,10 +1,13 @@
 package advent03
 
+import kotlin.coroutines.experimental.buildSequence
 import kotlin.math.absoluteValue
 import kotlin.test.assertEquals
 
 fun main(args: Array<String>) {
-    println("Result part 1: ${manhattan(325489)}")
+    val input = 325489
+    println("Result part 1: ${manhattan(input)}")
+    println("Result part 2: ${accValues().find { it.second > input }!!.second}")
 }
 
 fun maxSquareLoc(i: Int) = 4 * i * i + 4 * i
@@ -30,6 +33,56 @@ fun manhattanImpl(loc: Int): Int {
     val minCornerDist = cornerLocs.map { (it - loc).absoluteValue }.min()!!
     //  println("#manhattan, loc:$loc, square:$square, maxSquareLoc:$maxSquareLoc, edgeLen:$edgeLen, minCornerDist:$minCornerDist")
     return 2 * square - minCornerDist
+}
+
+data class Point(val x: Int, val y: Int)
+
+fun accValues(): Sequence<Pair<Point, Int>> = buildSequence {
+    val map: MutableMap<Point, Int> = mutableMapOf<Point, Int>().withDefault { 0 }
+
+    fun calcAndStore(p: Point): Int {
+        val sum = map.getValue(p.copy(x = p.x + 1)) +
+                map.getValue(p.copy(x = p.x + 1, y = p.y + 1)) +
+                map.getValue(p.copy(y = p.y + 1)) +
+                map.getValue(p.copy(x = p.x - 1, y = p.y + 1)) +
+                map.getValue(p.copy(x = p.x - 1)) +
+                map.getValue(p.copy(x = p.x - 1, y = p.y - 1)) +
+                map.getValue(p.copy(y = p.y - 1)) +
+                map.getValue(p.copy(x = p.x + 1, y = p.y - 1))
+        map[p] = sum
+        return sum
+    }
+
+    var pos = Point(0, 0)
+    map[pos] = 1
+    yield(Pair(pos, 1))
+    var steps = 1
+    while (true) {
+        // move steps right
+        (1..steps).forEach {
+            pos = pos.copy(x = pos.x + 1)
+            yield(Pair(pos, calcAndStore(pos)))
+        }
+        // move steps up
+        (1..steps).forEach {
+            pos = pos.copy(y = pos.y + 1)
+            yield(Pair(pos, calcAndStore(pos)))
+        }
+        // inc steps
+        steps += 1
+        // move steps left
+        (1..steps).forEach {
+            pos = pos.copy(x = pos.x - 1)
+            yield(Pair(pos, calcAndStore(pos)))
+        }
+        // move steps down
+        (1..steps).forEach {
+            pos = pos.copy(y = pos.y - 1)
+            yield(Pair(pos, calcAndStore(pos)))
+        }
+        // inc steps and repeat
+        steps += 1
+    }
 }
 
 object Tests {
