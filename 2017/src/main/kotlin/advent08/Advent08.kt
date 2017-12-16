@@ -62,7 +62,7 @@ val operatorParser: Parser<Operator> =
                 string("<").map { Operator.Less }
 
 val conditionParser: Parser<Condition> =
-        (idParser.ignoreWs(ws) * operatorParser.ignoreWs(ws) * numberParser).map {
+        (idParser.ignore(ws) * operatorParser.ignore(ws) * numberParser).map {
             Condition(
                     it.first.first,
                     it.first.second,
@@ -70,10 +70,10 @@ val conditionParser: Parser<Condition> =
         }
 
 val instructionParser: Parser<Instruction> = (
-        idParser.ignoreWs(ws) *
-                actionParser.ignoreWs(ws) *
-                numberParser.ignoreWs(ws) *
-                string("if").ignoreWs(ws) *
+        idParser.ignore(ws) *
+                actionParser.ignore(ws) *
+                numberParser.ignore(ws) *
+                string("if").ignore(ws) *
                 conditionParser
         ).map {
     Instruction(
