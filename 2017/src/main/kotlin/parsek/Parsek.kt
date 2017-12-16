@@ -1,5 +1,6 @@
 package parsek
 
+import parsek.Parsers.const
 import parsek.Parsers.or
 import parsek.Parsers.regex
 import parsek.Parsers.string
@@ -14,17 +15,28 @@ sealed class Parsed<out T> {
         init {
             // println("Matched: ${this}")
         }
+
+        override val isSuccess: Boolean get() = true
     }
 
     /**
      * @param index The index where this parse failed.
      */
     data class Failure(val index: Int, val lastParser: Parser<*>, val input: String) : Parsed<Nothing>() {
+        init {
+            // println("Failure: ${this}")
+        }
+
+        override val isSuccess: Boolean get() = false
         override fun toString(): String =
                 """Parse error while processing $lastParser:
 $input
 ${"^".padStart(index + 1)}"""
     }
+
+    abstract val isSuccess: Boolean
+    val isFailure: Boolean
+        get() = !isSuccess
 }
 
 fun <T, R> Parsed<T>.match(
@@ -43,7 +55,7 @@ fun <T> Parsed<T>.get(): Parsed.Success<T> = when (this) {
     else -> fail("Parse error: ${this}")
 }
 
-interface Parser<T> {
+interface Parser<out T> {
     fun parse(input: String, index: Int = 0): Parsed<T>
 }
 
@@ -94,12 +106,16 @@ sealed class Either<L, R> {
 }
 
 object Parsers {
+    fun <T> const(c: T) = object : Parser<T> {
+        override fun parse(input: String, index: Int): Parsed<T> = Parsed.Success(c, index)
+    }
+
     fun string(s: String) = StringParser(s)
 
     fun regex(re: Regex) = RegexParser(re)
 
-    fun <A, B> cons(a: Parser<A>, b: Parser<B>): Parser<Pair<A, B>> =
-            a.flatMap { aValue -> b.map { bValue -> Pair(aValue, bValue) } }
+    fun <A, B> cons(a: Parser<A>, b: () -> Parser<B>): Parser<Pair<A, B>> =
+            a.flatMap { aValue -> b().map { bValue -> Pair(aValue, bValue) } }
 
     fun <A, B> either(a: Parser<A>, b: Parser<B>): Parser<Either<A, B>> = object : Parser<Either<A, B>> {
         override fun parse(input: String, index: Int): Parsed<Either<A, B>> {
@@ -110,21 +126,43 @@ object Parsers {
         }
     }
 
-    fun <T> or(a: Parser<T>, b: Parser<T>): Parser<T> = object : Parser<T> {
+    fun <T> or(a: Parser<T>, b: () -> Parser<T>): Parser<T> = object : Parser<T> {
         override fun parse(input: String, index: Int): Parsed<T> {
             return a.parse(input, index).match(
                     { it },
-                    { _ -> b.parse(input, index) }
+                    { _ -> b().parse(input, index) }
             )
         }
     }
 }
 
-operator fun <A, B> Parser<A>.times(b: Parser<B>) = Parsers.cons(this, b)
+operator fun <A, B> Parser<A>.times(b: () -> Parser<B>) = Parsers.cons(this, b)
+operator fun <A, B> Parser<A>.times(b: Parser<B>) = Parsers.cons(this, { b })
 
-infix fun <T> Parser<T>.or(o: Parser<T>): Parser<T> = or(this, o)
+infix fun <T> Parser<T>.or(o: () -> Parser<T>): Parser<T> = or(this, o)
+infix fun <T> Parser<T>.or(o: Parser<T>): Parser<T> = this.or({ o })
 
-fun <A> Parser<A>.ignoreWs(ws: P0): Parser<A> = flatMap { aValue -> ws.map { aValue } }
+fun <T> Parser<T>.rep(): Parser<List<T>> = object : Parser<List<T>> {
+    override fun parse(input: String, index: Int): Parsed<List<T>> {
+        val result = mutableListOf<T>()
+        var lastIndex = index
+        while (true) {
+            val r = this@rep.parse(input, lastIndex)
+            when (r) {
+                is Parsed.Success -> {
+                    lastIndex = r.index
+                    result.add(r.value)
+                }
+                else ->
+                    return Parsed.Success(result, lastIndex)
+            }
+        }
+    }
+}
+
+fun <A> Parser<A>.optional(): Parser<A?> = this.map<A, A?> { it }.or(const<A?>(null))
+
+fun <A> Parser<A>.ignore(ws: Parser<Any?>): Parser<A> = (this * ws).map { it.first }
 
 object Tests {
     fun main(args: Array<String>) {
@@ -139,7 +177,7 @@ object Tests {
 
         assertEquals(17, intParser.parse("17").get().value)
 
-        val aOrB = or(string("a"), string("b"))
+        val aOrB = string("a").or(string("b"))
 
         assertEquals("a", aOrB.parse("a").get().value)
         assertEquals("b", aOrB.parse("b").get().value)
