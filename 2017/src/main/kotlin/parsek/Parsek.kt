@@ -47,6 +47,10 @@ fun <T, R> Parsed<T>.match(
     is Parsed.Failure -> onFailure(this)
 }
 
+fun <T, R> Parsed<T>.flatMap(
+        f: (Parsed.Success<T>) -> Parsed<R>
+): Parsed<R> = match(f, { it })
+
 fun <T, R> Parsed<T>.map(f: (T) -> R): Parsed<R> = this.match({ s -> s.map(f) }, { it })
 fun <T, R> Parsed.Success<T>.map(f: (T) -> R): Parsed.Success<R> = Parsed.Success(f(value), index)
 
@@ -57,6 +61,10 @@ fun <T> Parsed<T>.get(): Parsed.Success<T> = when (this) {
 
 interface Parser<out T> {
     fun parse(input: String, index: Int = 0): Parsed<T>
+}
+
+fun <T> Parser<T>.parseFully(input: String): Parsed<T> = parse(input, 0).flatMap {
+    if (it.index == input.length) it else Parsed.Failure(it.index, this, input)
 }
 
 typealias P0 = Parser<Unit>
