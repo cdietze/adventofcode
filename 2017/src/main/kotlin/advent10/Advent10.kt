@@ -33,8 +33,8 @@ fun List<Byte>.denseHash(): List<Byte> {
 
 fun List<Byte>.hex(): String = map { String.format("%02x", it) }.joinToString("")
 
-fun hash(input: String): String {
-    val commands = input.map { it.toInt() }.toMutableList().apply { addAll(listOf(17, 31, 73, 47, 23)) }.repeat(64)
+fun String.knotHash(): String {
+    val commands = this.map { it.toInt() }.toMutableList().apply { addAll(listOf(17, 31, 73, 47, 23)) }.repeat(64)
     val sparseHash = twist((0..255).toList().map { it.toByte() }, commands)
     return sparseHash.denseHash().hex()
 }
@@ -43,14 +43,14 @@ fun main(args: Array<String>) {
     val input = File("src/main/kotlin/advent10/input.txt").readText().split(",").map { it.toInt() }
     println("Result part 1: ${twist((0..255).toList(), input).let { it[0] * it[1] }}")
     val textInput = File("src/main/kotlin/advent10/input.txt").readText()
-    println("Result part 2: ${hash(textInput)}")
+    println("Result part 2: ${textInput.knotHash()}")
 }
 
 object Tests {
     @JvmStatic
     fun main(args: Array<String>) {
         assertEquals(listOf(3, 4, 2, 1, 0), twist((0..4).toList(), listOf(3, 4, 1, 5)))
-        assertEquals("a2582a3a0e66e6e86e3812dcb672a272", hash(""))
-        assertEquals("33efeb34ea91902bb2f59c9920caa6cd", hash("AoC 2017"))
+        assertEquals("a2582a3a0e66e6e86e3812dcb672a272", "".knotHash())
+        assertEquals("33efeb34ea91902bb2f59c9920caa6cd", "AoC 2017".knotHash())
     }
 }
