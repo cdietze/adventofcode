@@ -10,11 +10,11 @@ import kotlin.test.assertTrue
 val garbageParser: Parser<Unit> = regex("^<(([^!>]|(!.))*)?>".toRegex()).map { Unit }
 
 // Returns the total score of this and contained groups
-fun scoreParser(depth: Int = 1): Parser<Int> = (string("{") * { itemList(depth + 1).optional() } * string("}")).map { depth + (it.first.second ?: 0) }
+fun scoreParser(depth: Int = 1): Parser<Int> = (string("{").ignore() * { itemList(depth + 1).optional() } * string("}").ignore()).map { depth + (it ?: 0) }
 
 fun item(depth: Int): Parser<Int> = scoreParser(depth).or(garbageParser.map { 0 })
 
-fun itemList(depth: Int): Parser<Int> = (item(depth) * { (string(",") * item(depth)).rep().map { it.map { it.second }.sum() }.optional().map { it ?: 0 } }).map { it.first + it.second }
+fun itemList(depth: Int): Parser<Int> = (item(depth) * { (string(",").ignore() * item(depth)).rep().map { it.map { it }.sum() }.optional().map { it ?: 0 } }).map { it.first + it.second }
 
 val countGarbageItem: Parser<Int> = (string("<") * ((regex("^[^!>]+".toRegex()).map { it.value.length }).or((regex("^(!.)+".toRegex()).map { 0 }))).rep() * string(">"))
         .map { it.first.second.sum() }

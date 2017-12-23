@@ -98,6 +98,13 @@ data class StringParser(val s: String) : Parser<String> {
     }
 }
 
+data class CharParser(val c: Char) : Parser<Char> {
+    override fun parse(input: String, index: Int): Parsed<Char> {
+        return if (input[index] == c) Parsed.Success(c, index + 1)
+        else Parsed.Failure(index, this, input)
+    }
+}
+
 data class RegexParser(val re: Regex) : Parser<MatchResult> {
     override fun parse(input: String, index: Int): Parsed<MatchResult> {
         val result = re.find(input.substring(index))
@@ -142,7 +149,27 @@ object Parsers {
             )
         }
     }
+
+    val int: Parser<Int> = Parsers.regex("^-?\\d+".toRegex()).map { it.value.toInt() }
+    fun char(c: Char): Parser<Char> = CharParser(c)
+    val char: Parser<Char> = object : Parser<Char> {
+        override fun parse(input: String, index: Int): Parsed<Char> =
+                Parsed.Success(input[index], index + 1)
+    }
 }
+
+/**
+ * Wraps a parser whose output shall be ignored.
+ *
+ * This is a distinct type not implementing [Parser<Unit>] to help type inference.
+ */
+class IgnoringParser(val p: Parser<Any?>)
+
+operator fun <B> IgnoringParser.times(b: () -> Parser<B>): Parser<B> = Parsers.cons(this.p, b).map { it.second }
+
+operator fun <B> IgnoringParser.times(b: Parser<B>): Parser<B> = Parsers.cons(this.p, { b }).map { it.second }
+
+operator fun <A> Parser<A>.times(b: IgnoringParser): Parser<A> = Parsers.cons(this, { b.p }).map { it.first }
 
 operator fun <A, B> Parser<A>.times(b: () -> Parser<B>) = Parsers.cons(this, b)
 operator fun <A, B> Parser<A>.times(b: Parser<B>) = Parsers.cons(this, { b })
@@ -171,6 +198,7 @@ fun <T> Parser<T>.rep(): Parser<List<T>> = object : Parser<List<T>> {
 fun <A> Parser<A>.optional(): Parser<A?> = this.map<A, A?> { it }.or(const<A?>(null))
 
 fun <A> Parser<A>.ignore(ws: Parser<Any?>): Parser<A> = (this * ws).map { it.first }
+fun <A> Parser<A>.ignore(): IgnoringParser = IgnoringParser(this)
 
 object Tests {
     fun main(args: Array<String>) {
