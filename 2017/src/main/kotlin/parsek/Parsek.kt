@@ -151,6 +151,7 @@ object Parsers {
     }
 
     val int: Parser<Int> = Parsers.regex("^-?\\d+".toRegex()).map { it.value.toInt() }
+    val long: Parser<Long> = Parsers.regex("^-?\\d+".toRegex()).map { it.value.toLong() }
     fun char(c: Char): Parser<Char> = CharParser(c)
     val char: Parser<Char> = object : Parser<Char> {
         override fun parse(input: String, index: Int): Parsed<Char> =
