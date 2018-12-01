@@ -13,14 +13,16 @@ plugins {
 }
 
 repositories {
-    // Use jcenter for resolving your dependencies.
-    // You can declare any Maven/Ivy/file repository here.
+    mavenLocal()
     jcenter()
+    maven(url = "https://jitpack.io")
 }
 
 dependencies {
     // Use the Kotlin JDK 8 standard library
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+
+    implementation("com.github.cdietze:parsek:e2961c0")
 
     // Use the Kotlin test library
     testImplementation("org.jetbrains.kotlin:kotlin-test")
@@ -30,6 +32,8 @@ dependencies {
 }
 
 application {
+    val day = project.findProperty("day") ?: "01"
+    println("Running day $day")
     // Define the main class for the application
-    mainClassName = "advent_2018.AppKt"
+    mainClassName = "advent2018.day$day.Day${day}Kt"
 }
