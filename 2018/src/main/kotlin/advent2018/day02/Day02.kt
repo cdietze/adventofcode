@@ -30,13 +30,11 @@ fun solvePart2(): String {
         lines.drop(indexedValue.index).map { s -> Pair(indexedValue.value, s) }
     }
     val match = pairs.first { diff(it.first, it.second) == 1 }
-    return keepCommonParts(match.first, match.second)
+    return filterDiff(match.first, match.second)
 }
 
 fun diff(a: String, b: String): Int =
-    a.foldIndexed(0) { index, acc, c -> acc + if (c == b[index]) 0 else 1 }
+    a.withIndex().count { it.value != b[it.index] }
 
-fun keepCommonParts(a: String, b: String): String =
-    StringBuilder().apply {
-        a.forEachIndexed { index, c -> if (c == b[index]) this.append(c) }
-    }.toString()
+fun filterDiff(a: String, b: String): String =
+    a.filterIndexed { index, c -> c == b[index] }
