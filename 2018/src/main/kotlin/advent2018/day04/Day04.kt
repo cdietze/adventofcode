@@ -8,15 +8,31 @@ val inputFile = File("src/main/kotlin/advent2018/day04/input.txt")
 
 fun main(args: Array<String>) {
     println("Result part 1: ${solvePart1()}")
-//    println("Result part 2: ${solvePart2()}")
+    println("Result part 2: ${solvePart2()}")
 }
 
 fun solvePart1(): Int {
-    return inputFile
+    val sleepDurations = sleepDurations(records)
+    val topGuard = sleepDurations.maxBy { it.value.values.sum() }!!.key
+    val topMinute = sleepDurations[topGuard]!!.maxBy { it.value }!!.key
+    return topGuard * topMinute
+}
+
+fun solvePart2(): Int {
+    val sleepDurations = sleepDurations(records)
+    val topEntry = sleepDurations.maxBy { e ->
+        e.value.values.max()!!
+    }!!
+    val topGuard = topEntry.key
+    val topMinute = topEntry.value.maxBy { it.value }!!.key
+    return topGuard * topMinute
+}
+
+val records: List<Record> by lazy {
+    inputFile
         .readLines()
         .sorted()
         .map { record.parse(it).getOrFail().value }
-        .let { processTimeTable(it) }
 }
 
 val int: Parser<Int> = Rule("int") { (CharIn("+-").opt() * WhileCharIn("0123456789")).capture().map { it.toInt() } }
@@ -48,7 +64,9 @@ sealed class Action {
     object FallAsleep : Action()
 }
 
-fun processTimeTable(records: List<Record>): Int {
+private fun sleepDurations(
+    records: List<Record>
+): MutableMap<Int, MutableMap<Int, Int>> {
     val sleepDurations = mutableMapOf<Int, MutableMap<Int, Int>>()
         .withDefault { mutableMapOf<Int, Int>().withDefault { 0 } }
     val fellAsleepTimes = mutableMapOf<Int, LocalDateTime>()
@@ -66,7 +84,5 @@ fun processTimeTable(records: List<Record>): Int {
             }
         }
     }
-    val topGuard = sleepDurations.maxBy { it.value.values.sum() }!!.key
-    val topMinute = sleepDurations[topGuard]!!.maxBy { it.value }!!.key
-    return topGuard * topMinute
+    return sleepDurations
 }
