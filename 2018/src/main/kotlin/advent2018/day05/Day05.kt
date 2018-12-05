@@ -7,24 +7,36 @@ import kotlin.math.max
 
 val inputFile = File("src/main/kotlin/advent2018/day05/input.txt")
 
+val polarityDiff = ('A' - 'a').absoluteValue
+
 fun main(args: Array<String>) {
     println("Result part 1: ${solvePart1()}")
-//    println("Result part 2: ${solvePart2()}")
+    println("Result part 2: ${solvePart2()}")
 }
 
 fun solvePart1(): Int {
-    val polarityDiff = ('A' - 'a').absoluteValue
-    val list = LinkedList<Char>(inputFile.readText().toList())
-    tailrec fun loop(startIndex: Int = 0) {
-        for (i in startIndex until list.size - 1) {
-            if ((list[i] - list[i + 1]).absoluteValue == polarityDiff) {
-                list.removeAt(i)
-                list.removeAt(i)
+    return LinkedList(inputFile.readText().toList()).react().size
+}
+
+fun solvePart2(): Int {
+    val baseList = LinkedList<Char>(inputFile.readText().toList()).react()
+    return ('A'..'Z').map { c ->
+        Pair(c, LinkedList(baseList).apply {
+            removeAll(listOf(c, c + polarityDiff))
+        }.react().size)
+    }.minBy { it.second }!!.second
+}
+
+fun LinkedList<Char>.react(): LinkedList<Char> {
+    tailrec fun loop(startIndex: Int = 0): LinkedList<Char> {
+        for (i in startIndex until this.size - 1) {
+            if ((this[i] - this[i + 1]).absoluteValue == polarityDiff) {
+                this.removeAt(i)
+                this.removeAt(i)
                 return loop(max(0, i - 1))
             }
         }
-        if (startIndex == 0) return else loop()
+        return if (startIndex == 0) this else loop()
     }
-    loop()
-    return list.size
+    return loop()
 }
