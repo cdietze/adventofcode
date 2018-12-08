@@ -1,5 +1,6 @@
 package advent2018.day03
 
+import advent2018.common.int
 import parsek.*
 import java.io.File
 
@@ -45,8 +46,6 @@ fun Claim.points(): Sequence<Point> = sequence {
         }
     }
 }
-
-val int: Parser<Int> = Rule("int") { (CharIn("+-").opt() * WhileCharIn("0123456789")).capture().map { it.toInt() } }
 
 // Example input string:
 // #947 @ 245,231: 29x13
