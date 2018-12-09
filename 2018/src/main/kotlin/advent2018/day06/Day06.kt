@@ -11,12 +11,12 @@ val inputFile = File("src/main/kotlin/advent2018/day06/input.txt")
 
 fun main(args: Array<String>) {
     println("Result part 1: ${solvePart1()}")
-//    println("Result part 2: ${solvePart2()}")
+    println("Result part 2: ${solvePart2()}")
 }
 
 fun solvePart1(): Int {
     val points: List<Point> = inputFile.readLines().map { pointParser.parse(it).getOrFail().value }
-    val bounds = points.fold(Rect(points.first().x, points.first().y, 0, 0)) { bounds, p -> bounds.expand(p) }
+    val bounds = points.fold(Rect(points.first().x, points.first().y, 0, 0)) { bounds, p -> bounds.enclose(p) }
     val infiniteIndexes = bounds.border().map { it.closestIndex(points) }.toSet()
     return bounds.points()
         .map { it.closestIndex(points) }
@@ -26,6 +26,16 @@ fun solvePart1(): Int {
         .mapValues { it.value.size }
         .maxBy { it.value }!!
         .value
+}
+
+fun solvePart2(): Int {
+    val maxTotalDist = 10000
+    val points: List<Point> = inputFile.readLines().map { pointParser.parse(it).getOrFail().value }
+    val bounds = points.fold(Rect(points.first().x, points.first().y, 0, 0)) { bounds, p -> bounds.enclose(p) }
+    val expandedBounds = bounds.expand(maxTotalDist / points.size + 1)
+    return expandedBounds.points()
+        .filter { it.totalDistanceLessThan(points, maxTotalDist) }
+        .count()
 }
 
 data class Point(val x: Int, val y: Int)
@@ -52,12 +62,15 @@ fun Point.closestIndex(points: List<Point>): Int? {
     return bestIndex
 }
 
+fun Point.totalDistanceLessThan(points: List<Point>, maxTotalDist: Int): Boolean =
+    points.map { it.dist(this) }.sum() < maxTotalDist
+
 data class Rect(val x: Int, val y: Int, val width: Int, val height: Int)
 
 val Rect.x2: Int get() = x + width
 val Rect.y2: Int get() = y + height
 
-fun Rect.expand(p: Point): Rect {
+fun Rect.enclose(p: Point): Rect {
     val minX = min(p.x, x)
     val minY = min(p.y, y)
     val maxX = max(p.x, x + width)
@@ -83,6 +96,8 @@ fun Rect.border(): Sequence<Point> = sequence {
         yield(Point(x2, y))
     }
 }
+
+fun Rect.expand(v: Int) = Rect(x - v, y - v, width + 2 * v, height + 2 * v)
 
 val pointParser: Parser<Point> = Rule("Point") {
     (int * P(", ") * int).map(::Point)
