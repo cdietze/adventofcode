@@ -22,7 +22,7 @@ dependencies {
     // Use the Kotlin JDK 8 standard library
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 
-    implementation("com.github.cdietze:parsek:69f34fb")
+    implementation("com.github.cdietze:parsek:6ab3792")
 //    implementation("com.github.cdietze:parsek-jvm:1.0-SNAPSHOT")
 
     // Use the Kotlin test library
