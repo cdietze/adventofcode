@@ -1,16 +1,14 @@
 package advent2018.day09
 
-import java.util.*
-
 fun main(args: Array<String>) {
     println("Result part 1: ${solvePart1()}")
-//    println("Result part 2: ${solvePart2()}")
+    println("Result part 2: ${solvePart2()}")
 }
 
-fun solvePart1(): Int {
+fun solvePart1(): Long {
     var s = GameState(
         playerCount = 463,
-        lastMarble = 71787
+        lastMarbleValue = 71787
     )
     while (!s.done) {
         s = s.move()
@@ -18,51 +16,74 @@ fun solvePart1(): Int {
     return s.scores.values.max()!!
 }
 
-fun solvePart2(): Int {
+fun solvePart2(): Long {
     var s = GameState(
         playerCount = 463,
-        lastMarble = 71787 * 100
+        lastMarbleValue = 71787 * 100
     )
     while (!s.done) {
         s = s.move()
-        if (s.nextMarble % 1000 == 0) println("marble: ${s.nextMarble} / ${s.lastMarble}")
     }
     return s.scores.values.max()!!
 }
-
 
 data class GameState(
-    val currentPlayer: Int = -1,
+    var currentPlayer: Int = -1,
     val playerCount: Int,
-    val currentIndex: Int = 0,
-    val scores: MutableMap<Int, Int> = mutableMapOf(),
-    val nextMarble: Int = 1,
-    val lastMarble: Int,
-    val marbles: LinkedList<Int> = LinkedList(listOf(0))
+    var marble: Marble = Marble(0, null, null).apply {
+        _prev = this
+        _next = this
+    },
+    val scores: MutableMap<Int, Long> = mutableMapOf(),
+    var nextMarbleValue: Int = 1,
+    val lastMarbleValue: Int
 )
 
-val GameState.done: Boolean get() = nextMarble > lastMarble
+data class Marble(val value: Int, var _prev: Marble?, var _next: Marble?) {
+    var prev: Marble
+        get() = _prev!!
+        set(value) {
+            _prev = value
+        }
+    var next: Marble
+        get() = _next!!
+        set(value) {
+            _next = value
+        }
+
+    override fun toString(): String {
+        return "Marble(value=$value, prev=${_prev?.value}, next=${_next?.value})"
+    }
+}
+
+fun Marble.remove(): Marble {
+    prev.next = next
+    next.prev = prev
+    return this
+}
+
+val GameState.done: Boolean get() = nextMarbleValue > lastMarbleValue
 
 fun GameState.move(): GameState {
     if (done) return this
     val thisPlayer = (currentPlayer + 1) % playerCount
-    val thisMarble = nextMarble
+    val thisMarble = nextMarbleValue
     if (thisMarble > 0 && thisMarble % 23 == 0) {
-        val removeIndex = (currentIndex - 7 + marbles.size) % marbles.size
-        scores[thisPlayer] = scores.getOrDefault(thisPlayer, 0) + thisMarble + marbles[removeIndex]
-        marbles.removeAt(removeIndex)
-        return this.copy(
-            currentPlayer = thisPlayer,
-            currentIndex = removeIndex,
-            nextMarble = nextMarble + 1
-        )
+        val removeMarble = marble.prev.prev.prev.prev.prev.prev.prev
+        scores[thisPlayer] = scores.getOrDefault(thisPlayer, 0) + thisMarble + removeMarble.value
+        removeMarble.remove()
+        marble = removeMarble.next
+        currentPlayer = thisPlayer
+        nextMarbleValue += 1
+        return this
     } else {
-        val insertIndex = (currentIndex + 1) % (marbles.size) + 1
-        marbles.add(insertIndex, thisMarble)
-        return this.copy(
-            currentPlayer = thisPlayer,
-            currentIndex = insertIndex,
-            nextMarble = nextMarble + 1
-        )
+        val m1 = marble.next
+        val m2 = m1.next
+        marble = Marble(nextMarbleValue, m1, m2)
+        m1.next = marble
+        m2.prev = marble
+        currentPlayer = thisPlayer
+        nextMarbleValue += 1
+        return this
     }
 }
