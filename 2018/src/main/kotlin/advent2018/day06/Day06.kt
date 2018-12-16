@@ -1,11 +1,9 @@
 package advent2018.day06
 
-import advent2018.common.int
+import advent2018.common.*
 import parsek.*
 import java.io.File
 import kotlin.math.abs
-import kotlin.math.max
-import kotlin.math.min
 
 val inputFile = File("src/main/kotlin/advent2018/day06/input.txt")
 
@@ -38,8 +36,6 @@ fun solvePart2(): Int {
         .count()
 }
 
-data class Point(val x: Int, val y: Int)
-
 fun Point.dist(p: Point): Int = abs(x - p.x) + abs(y - p.y)
 
 fun Point.closestIndex(points: List<Point>): Int? {
@@ -64,40 +60,6 @@ fun Point.closestIndex(points: List<Point>): Int? {
 
 fun Point.totalDistanceLessThan(points: List<Point>, maxTotalDist: Int): Boolean =
     points.map { it.dist(this) }.sum() < maxTotalDist
-
-data class Rect(val x: Int, val y: Int, val width: Int, val height: Int)
-
-val Rect.x2: Int get() = x + width
-val Rect.y2: Int get() = y + height
-
-fun Rect.enclose(p: Point): Rect {
-    val minX = min(p.x, x)
-    val minY = min(p.y, y)
-    val maxX = max(p.x, x + width)
-    val maxY = max(p.y, y + height)
-    return Rect(minX, minY, maxX - minX, maxY - minY)
-}
-
-fun Rect.points(): Sequence<Point> = sequence {
-    for (x in x..x2) {
-        for (y in y..y2) {
-            yield(Point(x, y))
-        }
-    }
-}
-
-fun Rect.border(): Sequence<Point> = sequence {
-    for (x in x..x2) {
-        yield(Point(x, y))
-        yield(Point(x, y2))
-    }
-    for (y in y..y2) {
-        yield(Point(x, y))
-        yield(Point(x2, y))
-    }
-}
-
-fun Rect.expand(v: Int) = Rect(x - v, y - v, width + 2 * v, height + 2 * v)
 
 val pointParser: Parser<Point> = Rule("Point") {
     (int * P(", ") * int).map(::Point)
