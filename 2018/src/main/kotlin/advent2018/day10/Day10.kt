@@ -7,31 +7,38 @@ import java.io.File
 val inputFile = File("src/main/kotlin/advent2018/day10/input.txt")
 
 fun main(args: Array<String>) {
-    println("Result part 1: ${solvePart1()}")
-//    println("Result part 2: ${solvePart2()}")
+    println("Result part 1:\n${solvePart1()}")
+    println("Result part 2: ${solvePart2()}")
 }
 
+val best: IndexedValue<Chart> by lazy { findBest() }
+
 fun solvePart1(): String {
+    return best.value.toPrettyString()
+}
+
+fun solvePart2(): Int {
+    return best.index
+}
+
+private fun findBest(): IndexedValue<Chart> {
     val initialChart: Chart = inputFile
         .readLines()
         .map { lightParser.parse(it).getOrFail().value }
         .map { Pair(it.pos, it) }
         .toMap()
-    val best: Chart =
-        sequence {
-            var chart = initialChart
-            (0..Int.MAX_VALUE).forEach { i ->
-                //            println("move $i, connectivity: ${chart.connectivity()}, area: ${chart.bounds().area}")
-                yield(chart)
-                chart = chart.move()
-            }
+    return sequence {
+        var chart = initialChart
+        (0..Int.MAX_VALUE).forEach { i ->
+            //            println("move $i, connectivity: ${chart.connectivity()}, area: ${chart.bounds().area}")
+            yield(IndexedValue(i, chart))
+            chart = chart.move()
         }
-            .map { chart: Chart -> Pair(chart, chart.connectivity()) }
-            .take(100000)
-            .maxBy { it.second }!!
-            .first
-//    println("Found best. index: ${best.first.index}, connectivity: ${best.first.chart.connectivity()}, area: ${best.first.chart.bounds().area}")
-    return best.toPrettyString()
+    }
+        .map { chart: IndexedValue<Chart> -> Pair(chart, chart.value.connectivity()) }
+        .take(100000)
+        .maxBy { it.second }!!
+        .first
 }
 
 data class Vector(val x: Int, val y: Int)
