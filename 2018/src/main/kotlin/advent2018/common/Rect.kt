@@ -19,8 +19,8 @@ fun Rect.enclose(p: Point): Rect {
 }
 
 fun Rect.points(): Sequence<Point> = sequence {
-    for (x in x..x2) {
-        for (y in y..y2) {
+    for (y in y until y2) {
+        for (x in x until x2) {
             yield(Point(x, y))
         }
     }
