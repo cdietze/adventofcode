@@ -8,7 +8,7 @@ val inputFile = File("src/main/kotlin/advent2018/day12/input.txt")
 
 fun main(args: Array<String>) {
     println("Result part 1: ${solvePart1()}")
-//    println("Result part 2: ${solvePart2()}")
+    println("Result part 2: ${solvePart2()}")
 }
 
 typealias State = Set<Int>
@@ -54,4 +54,19 @@ fun solvePart1(): Int {
     val input = inputFile.readText().let { inputParser.parse(it).getOrFail().value }
     val finalState = (0 until 20).fold(input.initialState) { acc, i -> acc.step(input.transformations) }
     return finalState.sum()
+}
+
+fun solvePart2(): Long {
+    val input = inputFile.readText().let { inputParser.parse(it).getOrFail().value }
+    val totalStepCount = 50000000000
+    val firstBarrierStepCount = 100000
+    val secondBarrierStepCount = 100000
+    val firstBarrierState = (0 until firstBarrierStepCount).fold(input.initialState) { acc, i ->
+        acc.step(input.transformations)
+    }
+    val secondBarrierState = (0 until secondBarrierStepCount).fold(firstBarrierState) { acc, i ->
+        acc.step(input.transformations)
+    }
+    return secondBarrierState.sum() +
+            ((totalStepCount - firstBarrierStepCount - secondBarrierStepCount) / (secondBarrierStepCount)) * (secondBarrierState.sum() - firstBarrierState.sum())
 }
