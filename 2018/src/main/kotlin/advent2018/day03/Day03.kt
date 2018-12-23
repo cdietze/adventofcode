@@ -1,5 +1,6 @@
 package advent2018.day03
 
+import advent2018.common.Point
 import advent2018.common.int
 import parsek.*
 import java.io.File
@@ -52,5 +53,3 @@ fun Claim.points(): Sequence<Point> = sequence {
 val claimParser: Parser<Claim> = Rule("Claim") {
     (P("#") * int * P(" @ ") * int * P(",") * int * P(": ") * int * P("x") * int).map(::Claim)
 }
-
-data class Point(val x: Int, val y: Int)
