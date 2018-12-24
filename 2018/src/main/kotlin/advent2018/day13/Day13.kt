@@ -8,7 +8,7 @@ val inputFile = File("src/main/kotlin/advent2018/day13/input.txt")
 
 fun main(args: Array<String>) {
     println("Result part 1: ${solvePart1()}")
-//    println("Result part 2: ${solvePart2()}")
+    println("Result part 2: ${solvePart2()}")
 }
 
 enum class Dir {
@@ -50,7 +50,9 @@ fun CartTurnOption.next(): CartTurnOption = when (this) {
 
 data class Cart(val pos: Point, val dir: Dir, val turnOption: CartTurnOption = CartTurnOption.LEFT)
 
-data class State(val map: Map, val carts: Set<Cart>)
+data class State(val map: Map, val carts: MutableList<Cart?> = map.carts(), val currentCartIndex: Int = -1)
+
+fun State.mostRecentCart(): Cart? = carts.getOrNull(currentCartIndex)
 
 typealias Map = List<String>
 
@@ -59,64 +61,77 @@ operator fun Map.get(pos: Point): Char = this[pos.y][pos.x]
 
 fun <T> T?.toList(): List<T> = if (this == null) listOf() else listOf(this)
 
-fun State.tick(): Either<Point, State> {
-    val newCarts: MutableList<Cart> = carts.sortedWith(Comparator<Cart> { a, b ->
-        if (a.pos.y != b.pos.y) a.pos.y - b.pos.y
-        else a.pos.x - b.pos.x
-    }).toMutableList()
-    for (i in 0 until newCarts.size) {
-        val cart = newCarts[i]
-        val newPos = cart.dir(cart.pos)
-        if (newCarts.any { it.pos == newPos }) return Left(newPos)
-        val newCart = when (map[newPos]) {
-            '+' -> cart.copy(pos = newPos, dir = cart.turnOption(cart.dir), turnOption = cart.turnOption.next())
-            '\\' -> cart.copy(
-                pos = newPos, dir = when (cart.dir) {
-                    LEFT -> UP
-                    UP -> LEFT
-                    RIGHT -> DOWN
-                    DOWN -> RIGHT
-                }
-            )
-            '/' -> cart.copy(
-                pos = newPos, dir = when (cart.dir) {
-                    LEFT -> DOWN
-                    UP -> RIGHT
-                    RIGHT -> UP
-                    DOWN -> LEFT
-                }
-            )
-            else -> cart.copy(pos = newPos)
-        }
-        newCarts[i] = newCart
+fun State.step(): State {
+    if (currentCartIndex < 0 || currentCartIndex >= carts.size) {
+        val newCarts: MutableList<Cart?> = carts.filterNotNull().sortedWith(Comparator<Cart> { a, b ->
+            if (a.pos.y != b.pos.y) a.pos.y - b.pos.y
+            else a.pos.x - b.pos.x
+        }).toMutableList()
+        return copy(carts = newCarts, currentCartIndex = 0)
     }
-    return Right(copy(carts = newCarts.toSet()))
+    val cart = carts[currentCartIndex] ?: return copy(currentCartIndex = currentCartIndex + 1)
+    val newPos = cart.dir(cart.pos)
+    val newCart = when (map[newPos]) {
+        '+' -> cart.copy(pos = newPos, dir = cart.turnOption(cart.dir), turnOption = cart.turnOption.next())
+        '\\' -> cart.copy(
+            pos = newPos, dir = when (cart.dir) {
+                LEFT -> UP
+                UP -> LEFT
+                RIGHT -> DOWN
+                DOWN -> RIGHT
+            }
+        )
+        '/' -> cart.copy(
+            pos = newPos, dir = when (cart.dir) {
+                LEFT -> DOWN
+                UP -> RIGHT
+                RIGHT -> UP
+                DOWN -> LEFT
+            }
+        )
+        else -> cart.copy(pos = newPos)
+    }
+    carts[currentCartIndex] = newCart
+    return copy(currentCartIndex = currentCartIndex + 1)
 }
+
+private fun Map.carts(): MutableList<Cart?> = withIndex().flatMap { y ->
+    y.value.withIndex().flatMap { x ->
+        val c = this[x.index, y.index]
+        val dir = when (c) {
+            '<' -> LEFT
+            '^' -> UP
+            '>' -> RIGHT
+            'v' -> DOWN
+            else -> null
+        }
+        dir?.let { Cart(Point(x.index, y.index), it) }.toList()
+    }
+}.toMutableList()
 
 fun solvePart1(): Point {
     val map: Map = inputFile.readLines()
-    val carts: Set<Cart> = map.withIndex().flatMap { y ->
-        y.value.withIndex().flatMap { x ->
-            val c = map[x.index, y.index]
-            val dir = when (c) {
-                '<' -> LEFT
-                '^' -> UP
-                '>' -> RIGHT
-                'v' -> DOWN
-                else -> null
-            }
-            dir?.let { Cart(Point(x.index, y.index), it) }.toList()
-        }
-    }.toSet()
-    var state = State(map, carts)
+    var state = State(map)
     while (true) {
-        when (val newState = state.tick()) {
-            is Left -> return newState.left
-            is Right -> state = newState.right
+        state = state.step()
+        state.mostRecentCart()?.let { recentCart ->
+            if (state.carts.filterNotNull().count { it.pos == recentCart.pos } > 1) return recentCart.pos
         }
     }
 }
 
-sealed class Either<A, B>
-class Left<A, B>(val left: A) : Either<A, B>()
-class Right<A, B>(val right: B) : Either<A, B>()
+fun solvePart2(): Point {
+    val map: Map = inputFile.readLines()
+    var state = State(map)
+    while (true) {
+        state = state.step()
+        state.mostRecentCart()?.let { recentCart ->
+            if (state.carts.filterNotNull().count { it.pos == recentCart.pos } > 1) {
+                state.carts.replaceAll { if (it?.pos == recentCart.pos) null else it }
+            }
+        }
+        if (state.currentCartIndex == 0 && state.carts.count() <= 1) {
+            return state.carts.first()!!.pos
+        }
+    }
+}
