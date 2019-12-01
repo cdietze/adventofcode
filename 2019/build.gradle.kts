@@ -13,6 +13,14 @@ dependencies {
     implementation(kotlin("stdlib-jdk8"))
 }
 
+sourceSets {
+    main {
+        resources {
+            srcDir("src/main/kotlin")
+        }
+    }
+}
+
 tasks {
     compileKotlin {
         kotlinOptions.jvmTarget = "1.8"
