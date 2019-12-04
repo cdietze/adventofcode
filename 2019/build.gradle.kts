@@ -7,10 +7,12 @@ plugins {
 
 repositories {
     mavenCentral()
+    maven(url = "https://jitpack.io")
 }
 
 dependencies {
     implementation(kotlin("stdlib-jdk8"))
+    implementation("com.github.cdietze:parsek:f61445f")
 }
 
 sourceSets {
