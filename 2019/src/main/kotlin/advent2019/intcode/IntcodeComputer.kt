@@ -2,31 +2,26 @@ package advent2019.intcode
 
 data class State(
     val mem: MutableList<Int>,
-    val input: () -> Int,
     var pc: Int = 0,
-    val output: MutableList<Int> = mutableListOf(),
-    var done: Boolean = false
+    val outputList: MutableList<Int> = mutableListOf(),
+    var done: Boolean = false,
+    var waitingForInput: Boolean = false
 )
 
-fun <T> Iterable<T>.toFun(): () -> T {
-    val iter = iterator()
-    return {
-        check(iter.hasNext()) { "No more input available" }
-        iter.next()
-    }
-}
-
-fun State.run(debug: Boolean = false): State {
+fun State.run(debug: Boolean = false, input: Iterator<Int>, output: ((Int) -> Unit)? = null): State {
     var state = this
-    while (!state.done) {
+    waitingForInput = false
+    while (!state.done && !state.waitingForInput) {
         if (debug) println(this)
-        state = state.step()
+        state = state.step(input, output)
     }
-    if (debug) println("Done\n$this")
+    if (debug) {
+        println("Done:$done, waitingForInput:$waitingForInput\n$this")
+    }
     return this
 }
 
-private fun State.step(): State {
+private fun State.step(input: Iterator<Int>, output: ((Int) -> Unit)?): State {
     when (mem[pc].opcode()) {
         1 -> { // ADD
             setParam(3, getParam(1) + getParam(2))
@@ -37,11 +32,16 @@ private fun State.step(): State {
             pc += 4
         }
         3 -> { // INPUT
-            setParam(1, input())
-            pc += 2
+            if (!input.hasNext()) {
+                waitingForInput = true
+            } else {
+                setParam(1, input.next())
+                pc += 2
+            }
         }
         4 -> { // OUTPUT
-            output.add(getParam(1))
+            outputList.add(getParam(1))
+            output?.invoke(getParam(1))
             pc += 2
         }
         5 -> { // jump-if-true

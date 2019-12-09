@@ -12,10 +12,10 @@ fun main() {
 
 fun solvePart1(): Int {
     val mem = inputText.split(",").map { it.toInt() }.toMutableList()
-    return State(mem = mem, input = { 1 }).run().output.first { it != 0 }
+    return State(mem = mem).run(input = generateSequence { 1 }.iterator()).outputList.first { it != 0 }
 }
 
 fun solvePart2(): Int {
     val mem = inputText.split(",").map { it.toInt() }.toMutableList()
-    return State(mem = mem, input = { 5 }).run().output.first { it != 0 }
+    return State(mem = mem).run(input = generateSequence { 5 }.iterator()).outputList.first { it != 0 }
 }
