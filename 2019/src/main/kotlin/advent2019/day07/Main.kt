@@ -2,6 +2,12 @@ package advent2019.day07
 
 import advent2019.intcode.State
 import advent2019.intcode.run
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.toList
+import kotlinx.coroutines.runBlocking
+import java.util.LinkedList
 
 val inputText = object {}.javaClass.getResource("input.txt").readText()
 
@@ -10,45 +16,43 @@ fun main() {
     println("Result part 2: ${solvePart2()}")
 }
 
-fun solvePart1(): Int {
+const val ampCount = 5
+
+fun solvePart1(): Int = runBlocking {
     val mem = inputText.split(",").map { it.toInt() }
-    return (0..4).permute().map { inputs ->
-        val result = inputs.fold(0) { acc, i ->
+    (0 until ampCount).permute().map { phases ->
+        phases.fold(0) { acc, i ->
+            var outputList = mutableListOf<Int>()
+            val inputQueue = LinkedList<Int>().apply { add(i); add(acc) }
             State(
-                mem = mem.toMutableList()
-            ).run(input = listOf(i, acc).iterator()).outputList.single()
+                mem = mem.toMutableList(),
+                read = { inputQueue.pop()!! },
+                write = { outputList.add(it) }
+            ).run()
+            outputList.last()
         }
-        result
     }.max()!!
 }
 
-data class Amp(
-    val state: State,
-    val inputQueue: MutableList<Int>
-)
-
-fun solvePart2(): Int {
+fun solvePart2(): Int = runBlocking {
     val mem = inputText.split(",").map { it.toInt() }
-    return (5..9).permute().map { phases ->
-        val amps = phases.map { phase ->
-            Amp(
-                State(
-                    mem = mem.toMutableList()
-                ), mutableListOf(phase)
-            )
-        }
-        amps[0].inputQueue.add(0)
-        while (amps.any { !it.state.done }) {
-            amps.forEachIndexed { index, amp ->
-                val nextAmp = amps[(index + 1) % amps.size]
-                amp.state.run(input = amp.inputQueue.iterator(), output = {
-                    nextAmp.inputQueue.add(it)
-                })
-                amp.inputQueue.clear()
+    (5..9).permute().map { phases ->
+        val channels = phases.map { phase ->
+            Channel<Int>(Channel.UNLIMITED).apply {
+                send(phase)
             }
         }
-        val result = amps.last().state.outputList.last()
-        result
+        channels[0].send(0)
+        val states = phases.mapIndexed { index, phase ->
+            State(
+                mem = mem.toMutableList(),
+                read = { channels[index].receive() },
+                write = { channels[(index + 1) % ampCount].send(it) }
+            )
+        }
+        states.map { state -> async { state.run() } }.awaitAll()
+        channels.forEach { it.close() }
+        channels[0].toList().last()
     }.max()!!
 }
 

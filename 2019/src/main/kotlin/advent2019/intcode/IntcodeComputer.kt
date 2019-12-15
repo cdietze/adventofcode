@@ -3,25 +3,17 @@ package advent2019.intcode
 data class State(
     val mem: MutableList<Int>,
     var pc: Int = 0,
-    val outputList: MutableList<Int> = mutableListOf(),
-    var done: Boolean = false,
-    var waitingForInput: Boolean = false
+    val read: suspend () -> Int,
+    val write: suspend (Int) -> Unit
 )
 
-fun State.run(debug: Boolean = false, input: Iterator<Int>, output: ((Int) -> Unit)? = null): State {
-    var state = this
-    waitingForInput = false
-    while (!state.done && !state.waitingForInput) {
-        if (debug) println(this)
-        state = state.step(input, output)
+suspend fun State.run(): Unit {
+    while (step()) {
+        // noop
     }
-    if (debug) {
-        println("Done:$done, waitingForInput:$waitingForInput\n$this")
-    }
-    return this
 }
 
-private fun State.step(input: Iterator<Int>, output: ((Int) -> Unit)?): State {
+private suspend fun State.step(): Boolean {
     when (mem[pc].opcode()) {
         1 -> { // ADD
             setParam(3, getParam(1) + getParam(2))
@@ -32,17 +24,14 @@ private fun State.step(input: Iterator<Int>, output: ((Int) -> Unit)?): State {
             pc += 4
         }
         3 -> { // INPUT
-            if (!input.hasNext()) {
-                waitingForInput = true
-            } else {
-                setParam(1, input.next())
-                pc += 2
-            }
+            val input = read()
+            setParam(1, input)
+            pc += 2
         }
         4 -> { // OUTPUT
-            outputList.add(getParam(1))
-            output?.invoke(getParam(1))
+            val out = getParam(1)
             pc += 2
+            write(out)
         }
         5 -> { // jump-if-true
             if (getParam(1) != 0) {
@@ -67,11 +56,11 @@ private fun State.step(input: Iterator<Int>, output: ((Int) -> Unit)?): State {
             pc += 4
         }
         99 -> {
-            done = true
+            return false
         }
         else -> throw RuntimeException("Unknown opcode in instruction: ${mem[pc]}, pc: $pc, mem: $mem")
     }
-    return this
+    return true
 }
 
 private fun State.setParam(index: Int, value: Int): State = apply {

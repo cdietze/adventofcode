@@ -1,5 +1,5 @@
 plugins {
-    kotlin("jvm") version "1.3.60"
+    kotlin("jvm") version "1.3.61"
 
     // Apply the application to add support for building a CLI application
     application
@@ -13,6 +13,7 @@ repositories {
 dependencies {
     implementation(kotlin("stdlib-jdk8"))
     implementation("com.github.cdietze:parsek:f61445f")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.3")
 }
 
 sourceSets {
