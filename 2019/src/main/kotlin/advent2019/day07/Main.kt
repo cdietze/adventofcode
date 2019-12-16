@@ -2,6 +2,7 @@ package advent2019.day07
 
 import advent2019.intcode.State
 import advent2019.intcode.run
+import advent2019.intcode.toMem
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.channels.Channel
@@ -18,14 +19,14 @@ fun main() {
 
 const val ampCount = 5
 
-fun solvePart1(): Int = runBlocking {
-    val mem = inputText.split(",").map { it.toInt() }
+fun solvePart1(): Long = runBlocking {
+    val mem = inputText.split(",").map { it.toLong() }
     (0 until ampCount).permute().map { phases ->
-        phases.fold(0) { acc, i ->
-            var outputList = mutableListOf<Int>()
-            val inputQueue = LinkedList<Int>().apply { add(i); add(acc) }
+        phases.fold(0L) { acc, i ->
+            var outputList = mutableListOf<Long>()
+            val inputQueue = LinkedList<Long>().apply { add(i.toLong()); add(acc) }
             State(
-                mem = mem.toMutableList(),
+                mem = mem.toMem(),
                 read = { inputQueue.pop()!! },
                 write = { outputList.add(it) }
             ).run()
@@ -34,18 +35,18 @@ fun solvePart1(): Int = runBlocking {
     }.max()!!
 }
 
-fun solvePart2(): Int = runBlocking {
-    val mem = inputText.split(",").map { it.toInt() }
-    (5..9).permute().map { phases ->
+fun solvePart2(): Long = runBlocking {
+    val mem = inputText.split(",").map { it.toLong() }
+    (5L..9L).permute().map { phases ->
         val channels = phases.map { phase ->
-            Channel<Int>(Channel.UNLIMITED).apply {
+            Channel<Long>(Channel.UNLIMITED).apply {
                 send(phase)
             }
         }
         channels[0].send(0)
         val states = phases.mapIndexed { index, phase ->
             State(
-                mem = mem.toMutableList(),
+                mem = mem.toMem(),
                 read = { channels[index].receive() },
                 write = { channels[(index + 1) % ampCount].send(it) }
             )
