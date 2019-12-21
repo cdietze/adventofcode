@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 plugins {
     kotlin("jvm") version "1.3.61"
 
@@ -37,4 +39,8 @@ application {
     val day = project.findProperty("day") ?: "01"
     println("Running day $day")
     mainClassName = "advent2019.day$day.MainKt"
+}
+val compileKotlin: KotlinCompile by tasks
+compileKotlin.kotlinOptions {
+    freeCompilerArgs = listOf("-Xinline-classes")
 }
