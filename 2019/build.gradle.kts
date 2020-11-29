@@ -9,12 +9,14 @@ plugins {
 
 repositories {
     mavenCentral()
-    maven(url = "https://jitpack.io")
+    maven(url = "https://jitpack.io") {
+        // metadataSources { artifact() } // Needed to use un-tagged builds
+    }
 }
 
 dependencies {
     implementation(kotlin("stdlib-jdk8"))
-    implementation("com.github.cdietze:parsek:f61445f")
+    implementation("com.github.cdietze.parsek:parsek-jvm:v0.2")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.3")
 }
 
