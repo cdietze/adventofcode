@@ -22,5 +22,4 @@ class Day04Test {
     fun testPart1() {
         assertEquals(2, advent2020.day04.resultPart1(demoInput))
     }
-
 }
