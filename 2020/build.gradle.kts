@@ -6,6 +6,7 @@ plugins {
 }
 
 repositories {
+//    mavenLocal()
     mavenCentral()
     maven(url = "https://jitpack.io") {
         // metadataSources { artifact() } // Needed to use un-tagged builds
@@ -13,7 +14,8 @@ repositories {
 }
 
 dependencies {
-    implementation("com.github.cdietze.parsek:parsek-jvm:v0.2")
+//    implementation("com.github.cdietze:parsek-jvm:unspecified")
+    implementation("com.github.cdietze.parsek:parsek-jvm:ff789e40b4")
     testImplementation(kotlin("test-junit"))
 }
 
