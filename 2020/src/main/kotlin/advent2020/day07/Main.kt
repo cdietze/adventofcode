@@ -16,29 +16,10 @@ object Main : AdventDay {
 }
 
 fun resultPart1(input: String): Int {
-    val openSet = mutableSetOf("shiny gold")
-    val resultSet = mutableSetOf("shiny gold")
-
-    while (openSet.isNotEmpty()) {
-//        println("openSet: $openSet")
-//        println("resultSet: $resultSet")
-        openSet.clear()
-        input.lines().filter {
-            val words = it.split(" ")
-            val color = words.take(2).joinToString(" ")
-            val base: String = words.drop(2).joinToString(" ")
-//            val matches = resultSet.any { v -> base.contains(v) }
-//            println("color: $color, base: $base, matches: $matches")
-            resultSet.any { v -> base.contains(v) }
-                .also {
-                    if (it && !resultSet.contains(color)) {
-                        openSet.add(color)
-                        resultSet.add(color)
-                    }
-                }
-        }
-    }
-    return resultSet.size - 1
+    val bagMap = input.lines().map { lineP.parse(it).getOrFail().value }.toMap()
+    fun containsShinyGold(color: String): Boolean = color == "shiny gold" ||
+            bagMap[color]?.any { bagCount -> containsShinyGold(bagCount.color) } ?: false
+    return bagMap.keys.count { containsShinyGold(it) } - 1
 }
 
 fun resultPart2(input: String): Long {
@@ -57,4 +38,4 @@ typealias Line = Pair<String, List<BagCount>>
 val colorP: Parser<String> = Rule("color") { word * P(" ") * word }.map { p -> p.toList().joinToString(" ") }
 val bagCountP: Parser<BagCount> = Rule("bagCount") { int * P(" ") * colorP }.map(::BagCount)
 val lineP: Parser<Line> =
-    Rule("line") { colorP * (CharPred { it !in '0'..'9' }.map { }.rep() * bagCountP).rep() }.map(::Line)
+    Rule("line") { colorP * (WhileCharPred { it !in '0'..'9' } * bagCountP).rep() }.map(::Line)
