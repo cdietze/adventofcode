@@ -14,7 +14,7 @@ object Main : AdventDay {
 
 fun resultPart1(input: String): Long =
     input.split("\n\n").map { group ->
-        group.filter { c -> ('a'..'z').contains(c) }.toSet().size.toLong()
+        group.filter { c -> c in ('a'..'z') }.toSet().size.toLong()
     }.sum()
 
 fun resultPart2(input: String): Long =
