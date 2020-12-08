@@ -9,17 +9,45 @@ object Main : AdventDay {
     fun main(args: Array<String>) = run()
 
     override fun resultPart1(): Any = resultPart1(inputText)
-//    override fun resultPart2(): Any = resultPart2(inputText)
+    override fun resultPart2(): Any = resultPart2(inputText)
 }
 
 fun resultPart1(input: String): Int {
-    val program: List<List<String>> = input.lines().map { it.split(" ") }
-    var acc = 0
-    var pc = 0
-    val visited = mutableSetOf<Int>()
-    while (pc !in visited) {
+    val program = input.lines().map { it.split(" ") }
+    return Computer().run(program).acc
+}
+
+fun resultPart2(input: String): Int {
+    val program = input.lines().map { it.split(" ") }
+    val programCandidates: List<Program> =
+        program.mapIndexedNotNull { index: Int, inst: List<String> ->
+            fun patchOp(c: String): Program {
+                return program.toMutableList().apply {
+                    this[index] = this[index].toMutableList().apply {
+                        this[0] = c
+                    }
+                }
+            }
+            when (inst[0]) {
+                "nop" -> patchOp("jmp")
+                "jmp" -> patchOp("nop")
+                else -> null
+            }
+        }
+    return programCandidates.map { p ->
+        Computer().run(p)
+    }.first { c -> c.pc >= program.size }.acc
+}
+
+typealias Instruction = List<String>
+typealias Program = List<Instruction>
+
+data class Computer(var acc: Int = 0, var pc: Int = 0, val visited: MutableSet<Int> = mutableSetOf())
+
+fun Computer.run(p: Program): Computer {
+    while (pc < p.size && pc !in visited) {
         visited += pc
-        val inst = program[pc]
+        val inst = p[pc]
         when (inst[0]) {
             "acc" -> {
                 pc += 1; acc += inst[1].toInt()
@@ -29,5 +57,5 @@ fun resultPart1(input: String): Int {
             else -> error("Unknown instruction: $inst")
         }
     }
-    return acc
+    return this
 }

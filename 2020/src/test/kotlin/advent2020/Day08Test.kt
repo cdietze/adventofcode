@@ -19,4 +19,9 @@ acc +6"""
     fun testPart1() {
         assertEquals(5, advent2020.day08.resultPart1(demoInput))
     }
+
+    @Test
+    fun testPart2() {
+        assertEquals(8, advent2020.day08.resultPart2(demoInput))
+    }
 }
