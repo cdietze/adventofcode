@@ -7,5 +7,6 @@ interface AdventDay {
         println("Running ${this.javaClass.name}")
         println("Result part 1: ${resultPart1()}")
         println("Result part 2: ${resultPart2()}")
+        println()
     }
 }

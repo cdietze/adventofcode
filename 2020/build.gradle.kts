@@ -36,7 +36,7 @@ tasks.withType<KotlinCompile>() {
 }
 
 application {
-    val day = project.findProperty("day") ?: "01"
-    println("Setting main class of day $day")
-    mainClass.set("advent2020.day${day}.Main")
+    val main = project.findProperty("day")?.let { "advent2020.day${it}.Main" } ?: "advent2020.MainKt"
+    println("Setting main class to $main")
+    mainClass.set(main)
 }
