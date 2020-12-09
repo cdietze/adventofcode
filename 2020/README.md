@@ -1,5 +1,9 @@
 # My Solutions to [Advent of Code 2020](https://adventofcode.com/2020)
 
+To run all solutions, call
+
+    ./gradlew run
+
 To run solution for day `x`, call
 
     ./gradlew run -Pday=x
