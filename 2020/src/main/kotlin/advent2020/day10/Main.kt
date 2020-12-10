@@ -20,16 +20,16 @@ fun resultPart1(input: String): Int {
 }
 
 fun resultPart2(input: String): Long {
-    val list: List<Long> = listOf(0L) + input.lines().map { it.toLong() }.sorted()
+    val numbers = input.lines().map { it.toLong() }.toSet() + 0L
     val pathMap = mutableMapOf(0L to 1L)
     fun pathCount(num: Long): Long = when {
         num < 0 -> 0
-        !list.contains(num) -> 0
+        !numbers.contains(num) -> 0
         else -> pathMap.getOrPut(num) {
             (1L..3L).sumOf {
                 pathCount(num - it)
             }
         }
     }
-    return pathCount(list.maxOrNull()!!)
+    return pathCount(numbers.maxOrNull()!!)
 }
