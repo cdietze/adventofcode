@@ -26,13 +26,13 @@ fun resultPart1(input: String): Int {
 }
 
 fun resultPart2(input: String): Int {
-    tailrec fun List<String>.canSeeOccupiedSeat(x: Int, y: Int, xoff: Int, yoff: Int): Boolean {
-        val xx = x + xoff
-        val yy = y + yoff
+    tailrec fun List<String>.canSeeOccupiedSeat(x: Int, y: Int, xOff: Int, yOff: Int): Boolean {
+        val xx = x + xOff
+        val yy = y + yOff
         return when (val n = char(xx, yy)) {
             '#' -> true
             null, 'L' -> false
-            '.' -> canSeeOccupiedSeat(xx, yy, xoff, yoff)
+            '.' -> canSeeOccupiedSeat(xx, yy, xOff, yOff)
             else -> error("Unknown char: $n")
         }
     }
@@ -73,7 +73,7 @@ fun runSim(initial: List<String>, cellStep: (List<String>.(x: Int, y: Int, c: Ch
         val nextState = state.step()
         return if (nextState == state) state else impl(nextState)
     }
-    return impl(initial).map { it.count { it == '#' } }.sum()
+    return impl(initial).map { it.count { c -> c == '#' } }.sum()
 }
 
 fun List<String>.char(x: Int, y: Int): Char? = getOrNull(y)?.getOrNull(x)
