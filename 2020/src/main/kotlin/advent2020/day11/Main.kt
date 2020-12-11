@@ -14,7 +14,7 @@ object Main : AdventDay {
 
 fun resultPart1(input: String): Int {
     fun List<String>.neighborCount(x: Int, y: Int, c: Char): Int =
-        foldNeighbors(0, x, y, { acc, xx, yy -> acc + if (char(xx, yy) == c) 1 else 0 })
+        foldDirs(0) { acc, xo, yo -> acc + if (char(x + xo, y + yo) == c) 1 else 0 }
 
     return runSim(input.lines()) { x: Int, y: Int, c: Char ->
         when (c) {
@@ -26,28 +26,19 @@ fun resultPart1(input: String): Int {
 }
 
 fun resultPart2(input: String): Int {
-    tailrec fun List<String>.canSeeOccupiedSeat(x: Int, y: Int, xOff: Int, yOff: Int): Boolean {
-        val xx = x + xOff
-        val yy = y + yOff
+    tailrec fun List<String>.canSeeOccupiedSeat(x: Int, y: Int, xo: Int, yo: Int): Boolean {
+        val xx = x + xo
+        val yy = y + yo
         return when (val n = char(xx, yy)) {
             '#' -> true
             null, 'L' -> false
-            '.' -> canSeeOccupiedSeat(xx, yy, xOff, yOff)
+            '.' -> canSeeOccupiedSeat(xx, yy, xo, yo)
             else -> error("Unknown char: $n")
         }
     }
 
-    fun List<String>.occupiedSeatCount(x: Int, y: Int): Int {
-        fun Boolean.toInt() = if (this) 1 else 0
-        return canSeeOccupiedSeat(x, y, 0, -1).toInt() +
-                canSeeOccupiedSeat(x, y, 1, -1).toInt() +
-                canSeeOccupiedSeat(x, y, 1, 0).toInt() +
-                canSeeOccupiedSeat(x, y, 1, 1).toInt() +
-                canSeeOccupiedSeat(x, y, 0, 1).toInt() +
-                canSeeOccupiedSeat(x, y, -1, 1).toInt() +
-                canSeeOccupiedSeat(x, y, -1, 0).toInt() +
-                canSeeOccupiedSeat(x, y, -1, -1).toInt()
-    }
+    fun List<String>.occupiedSeatCount(x: Int, y: Int): Int =
+        foldDirs(0) { acc, xo, yo -> acc + if (canSeeOccupiedSeat(x, y, xo, yo)) 1 else 0 }
 
     return runSim(input.lines()) { x: Int, y: Int, c: Char ->
         when (c) {
@@ -78,15 +69,16 @@ fun runSim(initial: List<String>, cellStep: (List<String>.(x: Int, y: Int, c: Ch
 
 fun List<String>.char(x: Int, y: Int): Char? = getOrNull(y)?.getOrNull(x)
 
-fun <R> foldNeighbors(initial: R, x: Int, y: Int, f: (acc: R, x: Int, y: Int) -> R): R {
+/** Folds over all orthogonal and diagonal directions - there are 8 of these */
+fun <R> foldDirs(initial: R, f: (acc: R, xo: Int, yo: Int) -> R): R {
     var acc: R = initial
-    acc = f(acc, x, y - 1)
-    acc = f(acc, x + 1, y - 1)
-    acc = f(acc, x + 1, y)
-    acc = f(acc, x + 1, y + 1)
-    acc = f(acc, x, y + 1)
-    acc = f(acc, x - 1, y + 1)
-    acc = f(acc, x - 1, y)
-    acc = f(acc, x - 1, y - 1)
+    acc = f(acc, 0, -1)
+    acc = f(acc, 1, -1)
+    acc = f(acc, 1, 0)
+    acc = f(acc, 1, 1)
+    acc = f(acc, 0, 1)
+    acc = f(acc, -1, +1)
+    acc = f(acc, -1, 0)
+    acc = f(acc, -1, -1)
     return acc
 }
