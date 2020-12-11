@@ -13,50 +13,49 @@ object Main : AdventDay {
 }
 
 fun resultPart1(input: String): Int {
-    fun cellStep(state: List<String>, x: Int, y: Int, c: Char): Char {
-        fun neighborCount(x: Int, y: Int, c: Char): Int =
-            foldNeighbors(0, x, y, { acc, xx, yy -> acc + if (state.char(xx, yy) == c) 1 else 0 })
-        return when (c) {
+    fun List<String>.neighborCount(x: Int, y: Int, c: Char): Int =
+        foldNeighbors(0, x, y, { acc, xx, yy -> acc + if (char(xx, yy) == c) 1 else 0 })
+
+    return runSim(input.lines()) { x: Int, y: Int, c: Char ->
+        when (c) {
             'L' -> if (neighborCount(x, y, '#') == 0) '#' else 'L'
             '#' -> if (neighborCount(x, y, '#') >= 4) 'L' else '#'
             else -> c
         }
     }
-
-    return runSim(input.lines(), ::cellStep)
 }
 
 fun resultPart2(input: String): Int {
-    fun cellStep(state: List<String>, x: Int, y: Int, c: Char): Char {
-        tailrec fun List<String>.canSeeOccupiedSeat(x: Int, y: Int, xoff: Int, yoff: Int): Boolean {
-            val xx = x + xoff
-            val yy = y + yoff
-            return when (val n = char(xx, yy)) {
-                '#' -> true
-                null, 'L' -> false
-                '.' -> canSeeOccupiedSeat(xx, yy, xoff, yoff)
-                else -> error("Unknown char: $n")
-            }
+    tailrec fun List<String>.canSeeOccupiedSeat(x: Int, y: Int, xoff: Int, yoff: Int): Boolean {
+        val xx = x + xoff
+        val yy = y + yoff
+        return when (val n = char(xx, yy)) {
+            '#' -> true
+            null, 'L' -> false
+            '.' -> canSeeOccupiedSeat(xx, yy, xoff, yoff)
+            else -> error("Unknown char: $n")
         }
+    }
 
-        fun List<String>.occupiedSeatCount(x: Int, y: Int): Int {
-            fun Boolean.toInt() = if (this) 1 else 0
-            return canSeeOccupiedSeat(x, y, 0, -1).toInt() +
-                    canSeeOccupiedSeat(x, y, 1, -1).toInt() +
-                    canSeeOccupiedSeat(x, y, 1, 0).toInt() +
-                    canSeeOccupiedSeat(x, y, 1, 1).toInt() +
-                    canSeeOccupiedSeat(x, y, 0, 1).toInt() +
-                    canSeeOccupiedSeat(x, y, -1, 1).toInt() +
-                    canSeeOccupiedSeat(x, y, -1, 0).toInt() +
-                    canSeeOccupiedSeat(x, y, -1, -1).toInt()
-        }
-        return when (c) {
-            'L' -> if (state.occupiedSeatCount(x, y) == 0) '#' else 'L'
-            '#' -> if (state.occupiedSeatCount(x, y) >= 5) 'L' else '#'
+    fun List<String>.occupiedSeatCount(x: Int, y: Int): Int {
+        fun Boolean.toInt() = if (this) 1 else 0
+        return canSeeOccupiedSeat(x, y, 0, -1).toInt() +
+                canSeeOccupiedSeat(x, y, 1, -1).toInt() +
+                canSeeOccupiedSeat(x, y, 1, 0).toInt() +
+                canSeeOccupiedSeat(x, y, 1, 1).toInt() +
+                canSeeOccupiedSeat(x, y, 0, 1).toInt() +
+                canSeeOccupiedSeat(x, y, -1, 1).toInt() +
+                canSeeOccupiedSeat(x, y, -1, 0).toInt() +
+                canSeeOccupiedSeat(x, y, -1, -1).toInt()
+    }
+
+    return runSim(input.lines()) { x: Int, y: Int, c: Char ->
+        when (c) {
+            'L' -> if (occupiedSeatCount(x, y) == 0) '#' else 'L'
+            '#' -> if (occupiedSeatCount(x, y) >= 5) 'L' else '#'
             else -> c
         }
     }
-    return runSim(input.lines(), ::cellStep)
 }
 
 fun runSim(initial: List<String>, cellStep: (List<String>.(x: Int, y: Int, c: Char) -> Char)): Int {
