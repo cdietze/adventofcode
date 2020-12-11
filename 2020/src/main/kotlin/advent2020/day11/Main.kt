@@ -71,14 +71,12 @@ fun List<String>.char(x: Int, y: Int): Char? = getOrNull(y)?.getOrNull(x)
 
 /** Folds over all orthogonal and diagonal directions - there are 8 of these */
 fun <R> foldDirs(initial: R, f: (acc: R, xo: Int, yo: Int) -> R): R {
-    var acc: R = initial
-    acc = f(acc, 0, -1)
+    var acc = f(initial, 0, -1)
     acc = f(acc, 1, -1)
     acc = f(acc, 1, 0)
     acc = f(acc, 1, 1)
     acc = f(acc, 0, 1)
     acc = f(acc, -1, +1)
     acc = f(acc, -1, 0)
-    acc = f(acc, -1, -1)
-    return acc
+    return f(acc, -1, -1)
 }
