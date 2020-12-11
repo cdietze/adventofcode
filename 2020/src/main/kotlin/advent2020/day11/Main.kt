@@ -13,79 +13,71 @@ object Main : AdventDay {
 }
 
 fun resultPart1(input: String): Int {
-    fun List<String>.char(x: Int, y: Int): Char? = getOrNull(y)?.getOrNull(x)
-    fun List<String>.step(): List<String> {
+    fun cellStep(state: List<String>, x: Int, y: Int, c: Char): Char {
         fun neighborCount(x: Int, y: Int, c: Char): Int =
-            foldNeighbors(0, x, y, { acc, xx, yy -> acc + if (char(xx, yy) == c) 1 else 0 })
-        return this.mapIndexed { y, row ->
-            row.mapIndexed { x, c ->
-                when (c) {
-                    'L' -> if (neighborCount(x, y, '#') == 0) '#' else 'L'
-                    '#' -> if (neighborCount(x, y, '#') >= 4) 'L' else '#'
-                    else -> c
-                }
-            }
+            foldNeighbors(0, x, y, { acc, xx, yy -> acc + if (state.char(xx, yy) == c) 1 else 0 })
+        return when (c) {
+            'L' -> if (neighborCount(x, y, '#') == 0) '#' else 'L'
+            '#' -> if (neighborCount(x, y, '#') >= 4) 'L' else '#'
+            else -> c
         }
     }
 
-    tailrec fun impl(state: List<String>): List<String> {
-        val nextState = state.step()
-        return if (nextState == state) state else impl(nextState)
-    }
-    return impl(input.lines()).map { it.count { it == '#' } }.sum()
+    return runSim(input.lines(), ::cellStep)
 }
 
 fun resultPart2(input: String): Int {
-    fun List<String>.char(x: Int, y: Int): Char? = getOrNull(y)?.getOrNull(x)
-    tailrec fun List<String>.canSeeOccupiedSeat(x: Int, y: Int, xoff: Int, yoff: Int): Boolean {
-        val xx = x + xoff
-        val yy = y + yoff
-        return when (val c = char(xx, yy)) {
-            '#' -> true
-            null, 'L' -> false
-            '.' -> canSeeOccupiedSeat(xx, yy, xoff, yoff)
-            else -> error("Unknown char: $c")
+    fun cellStep(state: List<String>, x: Int, y: Int, c: Char): Char {
+        tailrec fun List<String>.canSeeOccupiedSeat(x: Int, y: Int, xoff: Int, yoff: Int): Boolean {
+            val xx = x + xoff
+            val yy = y + yoff
+            return when (val n = char(xx, yy)) {
+                '#' -> true
+                null, 'L' -> false
+                '.' -> canSeeOccupiedSeat(xx, yy, xoff, yoff)
+                else -> error("Unknown char: $n")
+            }
+        }
+
+        fun List<String>.occupiedSeatCount(x: Int, y: Int): Int {
+            fun Boolean.toInt() = if (this) 1 else 0
+            return canSeeOccupiedSeat(x, y, 0, -1).toInt() +
+                    canSeeOccupiedSeat(x, y, 1, -1).toInt() +
+                    canSeeOccupiedSeat(x, y, 1, 0).toInt() +
+                    canSeeOccupiedSeat(x, y, 1, 1).toInt() +
+                    canSeeOccupiedSeat(x, y, 0, 1).toInt() +
+                    canSeeOccupiedSeat(x, y, -1, 1).toInt() +
+                    canSeeOccupiedSeat(x, y, -1, 0).toInt() +
+                    canSeeOccupiedSeat(x, y, -1, -1).toInt()
+        }
+        return when (c) {
+            'L' -> if (state.occupiedSeatCount(x, y) == 0) '#' else 'L'
+            '#' -> if (state.occupiedSeatCount(x, y) >= 5) 'L' else '#'
+            else -> c
         }
     }
+    return runSim(input.lines(), ::cellStep)
+}
 
-    fun List<String>.occupiedSeatCount(x: Int, y: Int): Int {
-        fun Boolean.toInt() = if (this) 1 else 0
-        return canSeeOccupiedSeat(x, y, 0, -1).toInt() +
-                canSeeOccupiedSeat(x, y, 1, -1).toInt() +
-                canSeeOccupiedSeat(x, y, 1, 0).toInt() +
-                canSeeOccupiedSeat(x, y, 1, 1).toInt() +
-                canSeeOccupiedSeat(x, y, 0, 1).toInt() +
-                canSeeOccupiedSeat(x, y, -1, 1).toInt() +
-                canSeeOccupiedSeat(x, y, -1, 0).toInt() +
-                canSeeOccupiedSeat(x, y, -1, -1).toInt()
+fun runSim(initial: List<String>, cellStep: (List<String>.(x: Int, y: Int, c: Char) -> Char)): Int {
+    // Convenience function, in the stdlib there is only [CharSequence.map] which produces a [List<R>]
+    fun String.mapIndexed(f: (index: Int, c: Char) -> Char): String {
+        val sb = StringBuilder()
+        forEachIndexed { index, c -> sb.append(f(index, c)) }
+        return sb.toString()
     }
 
     fun List<String>.step(): List<String> =
-        this.mapIndexed { y, row ->
-            row.mapIndexed { x, c ->
-                when (c) {
-                    'L' -> if (occupiedSeatCount(x, y) == 0) '#' else 'L'
-                    '#' -> if (occupiedSeatCount(x, y) >= 5) 'L' else '#'
-                    else -> c
-                }
-            }
-        }
+        this.mapIndexed { y, row -> row.mapIndexed { x, c -> cellStep(x, y, c) } }
 
     tailrec fun impl(state: List<String>): List<String> {
         val nextState = state.step()
         return if (nextState == state) state else impl(nextState)
     }
-    return impl(input.lines()).map { it.count { it == '#' } }.sum()
+    return impl(initial).map { it.count { it == '#' } }.sum()
 }
 
-/**
- * Convenience function, in the stdlib there is only [CharSequence.map] which produces a [List<R>]
- */
-fun String.mapIndexed(f: (index: Int, c: Char) -> Char): String {
-    val sb = StringBuilder()
-    forEachIndexed { index, c -> sb.append(f(index, c)) }
-    return sb.toString()
-}
+fun List<String>.char(x: Int, y: Int): Char? = getOrNull(y)?.getOrNull(x)
 
 fun <R> foldNeighbors(initial: R, x: Int, y: Int, f: (acc: R, x: Int, y: Int) -> R): R {
     var acc: R = initial
