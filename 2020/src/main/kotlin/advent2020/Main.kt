@@ -11,7 +11,8 @@ val allDays = listOf(
     advent2020.day08.Main,
     advent2020.day09.Main,
     advent2020.day10.Main,
-    advent2020.day11.Main
+    advent2020.day11.Main,
+    advent2020.day12.Main
 )
 
 fun main() {
