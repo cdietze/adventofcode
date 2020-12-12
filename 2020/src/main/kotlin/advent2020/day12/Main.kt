@@ -39,7 +39,7 @@ fun resultPart2(input: String): Int {
 
     fun Point.rotateClockwise(): Point = Point(y, -x)
 
-    fun State.rotateClockwiseDeg(deg: Int): State = (0 until degToClockwiseRotations(deg)).fold(this, { acc, _ ->
+    fun State.rotateClockwise(times: Int): State = (0 until times).fold(this, { acc, _ ->
         acc.copy(wayPoint = acc.wayPoint.rotateClockwise())
     })
 
@@ -47,8 +47,8 @@ fun resultPart2(input: String): Int {
         val v = substring(1).toInt()
         return when (this[0]) {
             'N', 'E', 'S', 'W' -> s.copy(wayPoint = s.wayPoint.move(this[0], v))
-            'L' -> s.rotateClockwiseDeg(-v)
-            'R' -> s.rotateClockwiseDeg(v)
+            'L' -> s.rotateClockwise(4 - v / 90)
+            'R' -> s.rotateClockwise(v / 90)
             'F' -> s.copy(pos = Point(s.pos.x + v * s.wayPoint.x, s.pos.y + v * s.wayPoint.y))
             else -> error("Unexpected command: $this")
         }
@@ -69,6 +69,3 @@ fun Point.move(dir: Char, dist: Int) = when (dir) {
 }
 
 val Point.manhattanDist get(): Int = x.absoluteValue + y.absoluteValue
-
-/** Converts given angle from [deg] degrees to its equivalent number of quarterly clockwise rotations (between 0 and 3). */
-fun degToClockwiseRotations(deg: Int): Int = ((deg % 360) + 360) % 360 / 90
