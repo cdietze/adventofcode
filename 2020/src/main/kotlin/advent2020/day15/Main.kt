@@ -21,14 +21,15 @@ fun resultPart1(input: String): Int {
     return list.last()
 }
 
-fun resultPart2(input: String, targetIndex: Long = 30000000L): Long {
-    val numbers = input.split(",").map { it.toLong() }
-    val map = numbers.dropLast(1).mapIndexed { index, v ->
-        Pair(v, index.toLong())
-    }.toMap().toMutableMap()
+fun resultPart2(input: String, targetIndex: Int = 30000000): Int {
+    val numbers = input.split(",").map { it.toInt() }
+    val map = IntArray(targetIndex) { -1 }
+    numbers.dropLast(1).forEachIndexed { index, v ->
+        map[v] = index
+    }
     var next = numbers.last()
     (numbers.size - 1 until targetIndex - 1).forEach { index ->
-        val tmp = map[next]?.let { index - it } ?: 0
+        val tmp = map[next].let { i -> if (i < 0) 0 else index - i }
         map[next] = index
         next = tmp
     }
