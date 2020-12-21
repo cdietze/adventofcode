@@ -1,5 +1,7 @@
 package advent2020
 
+import advent2020.day20.flipVertically
+import advent2020.day20.rotateRight
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -8,6 +10,9 @@ class Day20Test {
     @Test
     fun testPart1() {
         assertEquals(20899048083289L, advent2020.day20.resultPart1(demoInput))
+
+        println("rotateRight: ${listOf("ab", "cd").rotateRight()}")
+        println("flip vert: ${listOf("ab", "cd").flipVertically()}")
     }
 
     val demoInput = """Tile 2311:
