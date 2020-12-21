@@ -14,21 +14,34 @@ object Main : AdventDay {
 }
 
 fun resultPart1(input: String): Long {
-    val tiles: List<Pair<Long, List<Int>>> = input.split("\n\n").map { tile ->
-        val lines = tile.lines()
-        val id = Regex("(\\d+)").find(lines[0])!!.groupValues[1].toLong()
-        Pair(id, lines.drop(1).borders())
-    }
-
-    val counts = tiles.map { it.second }.flatten().groupingBy { it }.eachCount().filter { it.value > 2 }.let {
-        println("Counts: $it")
-    }
-
-    fun List<Int>.isCorner(): Boolean = count { b -> tiles.map { it.second }.flatten().count { it == b } == 1 } >= 4
-    return tiles.filter { it.second.isCorner() }.map { it.first }.product()
+    val borderMap: Map<Long, List<Int>> = input.parseTiles().mapValues { e -> e.value.borders() }
+    fun List<Int>.isCorner(): Boolean = count { b -> borderMap.map { it.value }.flatten().count { it == b } == 1 } >= 4
+    return borderMap.filterValues { it.isCorner() }.map { it.key }.product()
 }
 
-fun List<String>.borders(): List<Int> {
+fun resultPart2(input: String): Long {
+    val tiles = input.parseTiles()
+
+//    data class Alignment(val flipped: Boolean, val rotation: Int)
+//
+//    fun Tile.alignTop(borderInt) = ...
+//    fun Tile.alignLeft(borderInt) = ...
+//
+//    typealias Grid = List<List<Pair<TileData,Alignment>>>
+//
+//    fun List<List<Pair<TileData,Alignment>>>.toSeaMap(): TileData
+
+    TODO()
+}
+
+typealias TileData = List<String>
+
+fun String.parseTiles(): Map<Long, TileData> = split("\n\n").map { tile ->
+    val lines = tile.lines()
+    Pair(Regex("(\\d+)").find(lines[0])!!.groupValues[1].toLong(), lines.drop(1))
+}.toMap()
+
+fun TileData.borders(): List<Int> {
     fun String.lineToInt(): Int = map { c -> if (c == '#') '1' else '0' }.joinToString(separator = "").toInt(2)
     fun String.lineToFlippedInt(): Int = reversed().lineToInt()
     val borderStrings = listOf(
@@ -40,27 +53,14 @@ fun List<String>.borders(): List<Int> {
     return borderStrings.flatMap { b -> listOf(b.lineToInt(), b.lineToFlippedInt()) }
 }
 
-fun resultPart2(input: String): Long {
-    val tiles: List<Pair<Long, List<Int>>> = input.split("\n\n").map { tile ->
-        val lines = tile.lines()
-        val id = Regex("(\\d+)").find(lines[0])!!.groupValues[1].toLong()
-        Pair(id, lines.drop(1).borders())
-    }
-
-    fun List<Int>.isCorner(): Boolean = count { b -> tiles.map { it.second }.flatten().count { it == b } == 1 } >= 4
-//    return tiles.first { it.second.isCorner() }.map { it.first }
-
-    TODO()
-}
-
-fun List<String>.rotateRight(): List<String> =
+fun TileData.rotateRight(): TileData =
     (0 until size).map { x ->
         (0 until size).map { y ->
             this[size - y - 1][x]
         }.joinToString(separator = "")
     }
 
-fun List<String>.flipVertically(): List<String> =
+fun TileData.flipVertically(): TileData =
     (0 until size).map { y ->
         this[size - y - 1]
     }
