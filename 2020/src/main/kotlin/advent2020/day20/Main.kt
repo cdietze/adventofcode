@@ -20,8 +20,7 @@ fun resultPart1(input: String): Long {
 }
 
 fun resultPart2(input: String): Long {
-    val tiles = input.parseTiles()
-
+//    val tiles = input.parseTiles()
 //    data class Alignment(val flipped: Boolean, val rotation: Int)
 //
 //    fun Tile.alignTop(borderInt) = ...

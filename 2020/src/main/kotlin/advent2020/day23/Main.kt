@@ -53,11 +53,7 @@ fun resultPart1(input: String): String {
     }
 
     val initial = input.parseCups()
-    val result = (1..100).fold(initial) { acc, i ->
-        acc.move().also {
-            //      println("Move $i, Cups: ${it.toChainString()}")
-        }
-    }
+    val result = (1..100).fold(initial) { acc, _ -> acc.move() }
 
     tailrec fun Cup.find(v: Int): Cup = if (value == v) this else next!!.find(v)
     val one = result.find(1)
