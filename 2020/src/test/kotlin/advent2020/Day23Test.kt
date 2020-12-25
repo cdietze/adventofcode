@@ -10,4 +10,8 @@ class Day23Test {
         assertEquals("67384529", advent2020.day23.resultPart1("389125467"))
     }
 
+    @Test
+    fun testPart2() {
+        assertEquals(149245887792L, advent2020.day23.resultPart2("389125467"))
+    }
 }
